@@ -27,6 +27,7 @@ Route::middleware('auth:sanctum')->group(function(){
 
     //Ruta para el perfil del usuario
     Route::get('/profile', [ProfileController::class, 'show']);
+    Route::post('/avatar', [ProfileController::class, 'saveAvatar']);
 });
 
 

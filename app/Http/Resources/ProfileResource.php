@@ -18,7 +18,7 @@ class ProfileResource extends JsonResource
         return [
             'name' => $this->name,
             'email' => $this->email,
-            'avatar' => $this->avatar,
+            'avatar' => asset('storage/'.$this->avatar),
             'email_verified_at' => $this->email_verified_at,
             'created_at' => $this->created_at,
             //TODO: Agregar estadísticas simples(cantidad total de tareas,
