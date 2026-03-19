@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProfileResource;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
-use Nette\Utils\Json;
+use App\Models\User;
+use Illuminate\Support\Facades\URL;
 
 class ProfileController extends Controller
 {
@@ -40,7 +42,7 @@ class ProfileController extends Controller
         $image = base64_decode($base64);
         if ($image === false) {
             return response()->json([
-                "message" => "Error al guardar la imagen",
+                "message" => "Error al codificar la imagen",
             ])->setStatusCode(500);
         }
 
@@ -67,5 +69,43 @@ class ProfileController extends Controller
         //retornar el perfil actualizado
         return (new ProfileResource($user))->response()->setStatusCode(200);
         
+    }
+
+    //Send Email Verification Notification
+    public function sendEmailVerificationNotification(Request $request){
+        $user = $request->user();
+        if($user->hasVerifiedEmail()){
+            return response()->json([
+                'message' => 'El email ya está verificado.',
+            ])->setStatusCode(200);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json([
+            "message" => "Email de verificación enviado correctamente.",
+        ])->setStatusCode(200);
+
+    }
+
+    //Verify user email
+    public function verifyEmail(Request $request, $id, $hash){
+        if(!URL::hasValidSignature($request)){
+            dd("PRIMER IF");
+            return redirect(config('app.frontend_url').'/email-verified/invalid');
+        }
+
+        $user = User::findOrFail($id);
+
+        if(!hash_equals(sha1($user->getEmailForVerification()), $hash)){
+            dd("SEGUNDO IF");
+            return redirect(config('app.frontend_url').'/email-verified/invalid');
+        }
+
+        if(!$user->hasVerifiedEmail()){
+            $user->markEmailAsVerified();
+        }
+       
+        return redirect(config('app.frontend_url').'/email-verified');
     }
 }
